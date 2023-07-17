@@ -2,6 +2,10 @@
 Changelog for package greenzie_ntrip_client
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.4 (2023-07-17)
+------------------
+* Fixed Bug with Building Python Debian
+
 1.2.3 (2023-06-26)
 ------------------
 * Changed the default NMEA Max Message Length to 84
