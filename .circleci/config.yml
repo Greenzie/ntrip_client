@@ -11,6 +11,7 @@ parameters:
 workflows:
   version: 2
   pushbuild:
+    unless: << pipeline.parameters.manual-bobcat-deploy >>
     jobs:
       # Build jobs
       - greenzie/debian_build:
@@ -55,8 +56,7 @@ workflows:
             - amd_debian_build
   
   manualdeploy:
-    when:
-      or: [ << pipeline.parameters.manual-bobcat-deploy >>, << pipeline.parameters.manual-bobcat-deploy >> ]
+    when: << pipeline.parameters.manual-bobcat-deploy >>
     jobs:
       # Build jobs
       - greenzie/debian_build:
@@ -70,6 +70,7 @@ workflows:
           executor: greenzie/debianize_arm64
 
       - greenzie/deploy:
+          context: GREENZIE
           name: "manual_deploy_all_bobcat"
           server_hostname: bobcat
           requires:
