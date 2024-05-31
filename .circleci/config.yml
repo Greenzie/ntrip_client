@@ -3,6 +3,11 @@ version: 2.1
 orbs:
   greenzie: greenzie/build_and_publish_debs@0.0.2
 
+parameters:
+  manual-bobcat-deploy:
+    type: boolean
+    default: false
+
 workflows:
   version: 2
   pushbuild:
@@ -45,6 +50,28 @@ workflows:
             branches:
               only:
                 - noetic
+          requires:
+            - arm64_debian_build
+            - amd_debian_build
+  
+  manualdeploy:
+    when:
+      or: [ << pipeline.parameters.manual-bobcat-deploy >>, << pipeline.parameters.manual-bobcat-deploy >> ]
+    jobs:
+      # Build jobs
+      - greenzie/debian_build:
+          name: "amd_debian_build"
+          platform: amd64
+          executor: greenzie/debianize_amd64
+
+      - greenzie/debian_build:
+          name: "arm64_debian_build"
+          platform: arm64
+          executor: greenzie/debianize_arm64
+
+      - greenzie/deploy:
+          name: "manual_deploy_all_bobcat"
+          server_hostname: bobcat
           requires:
             - arm64_debian_build
             - amd_debian_build
