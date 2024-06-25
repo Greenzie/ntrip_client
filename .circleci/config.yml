@@ -7,6 +7,9 @@ parameters:
   manual-bobcat-deploy:
     type: boolean
     default: false
+  filter-branch:
+    type: string
+    default: noetic
 
 workflows:
   version: 2
@@ -31,7 +34,7 @@ workflows:
           filters:
             branches:
               only:
-                - noetic
+                - << pipeline.parameters.filter-branch >>
           requires:
             - amd_debian_build
 
@@ -42,7 +45,7 @@ workflows:
           filters:
             branches:
               only:
-                - noetic
+                - << pipeline.parameters.filter-branch >>
           requires:
             - arm64_debian_build
 
@@ -52,7 +55,7 @@ workflows:
           filters:
             branches:
               only:
-                - noetic
+                - << pipeline.parameters.filter-branch >>
           requires:
             - arm64_debian_build
             - amd_debian_build
