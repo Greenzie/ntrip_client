@@ -7,6 +7,8 @@ parameters:
   manual-bobcat-deploy:
     type: boolean
     default: false
+  # Use this parameter to change the branch that the deployment jobs are triggered on
+  # It's useful for testing the deployment jobs on a different branch before merging
   filter-branch:
     type: string
     default: noetic
