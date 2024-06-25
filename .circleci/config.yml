@@ -53,6 +53,7 @@ workflows:
 
       - greenzie/debian_deploy_experimental:
           name: "deploy_all_bobcat"
+          context: GREENZIE
           server_hostname: bobcat
           filters:
             branches:
