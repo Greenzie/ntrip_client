@@ -39,7 +39,7 @@ workflows:
           requires:
             - amd_debian_build
 
-     - greenzie/debian_deploy_experimental:
+      - greenzie/debian_deploy_experimental:
          name: "deploy_arm64_greenzie"
          context: GREENZIE
          architecture: arm64
