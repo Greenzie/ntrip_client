@@ -193,7 +193,7 @@ class NTRIPRos:
   def error_code_passthrough(self, error_code):
     msg_out = UInt8()
     msg_out.data = error_code
-    self._error_code_pub(msg_out)
+    self._error_code_pub.publish(msg_out)
 
 if __name__ == '__main__':
   ntrip_ros = NTRIPRos()
