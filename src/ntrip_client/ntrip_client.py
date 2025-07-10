@@ -30,6 +30,11 @@ class NTRIPClient:
   DEFAULT_RECONNECT_ATEMPT_WAIT_SECONDS = 5
   DEFAULT_RTCM_TIMEOUT_SECONDS = 4
 
+  ERROR_CODE_NO_ERROR = 0
+  ERROR_CODE_INVALID_CREDENTIALS = 1
+  ERROR_CODE_INVALID_MOUNTPOINT = 2
+  ERROR_CODE_UKNONW_CONNECTION_ERROR = 3
+
   def __init__(self, host, port, mountpoint, ntrip_version, username, password, error_code_passthrough_function, output_format='stream', logerr=logging.error, logwarn=logging.warning, loginfo=logging.info, logdebug=logging.debug):
     # Bit of a strange pattern here, but save the log functions so we can be agnostic of ROS
     self._logerr = logerr
@@ -146,19 +151,19 @@ class NTRIPClient:
 
     # Some debugging hints about the kind of error we received
     known_error = False
-    error_code = 0
+    error_code = self.ERROR_CODE_NO_ERROR
     if any(sourcetable in response for sourcetable in _SOURCETABLE_RESPONSES):
       self._logwarn('Received sourcetable response from the server. This probably means the mountpoint specified is not valid')
       known_error = True
-      error_code = 2
+      error_code = self.ERROR_CODE_INVALID_MOUNTPOINT
     elif any(unauthorized in response for unauthorized in _UNAUTHORIZED_RESPONSES):
       self._logwarn('Received unauthorized response from the server. Check your username, password, and mountpoint to make sure they are correct.')
       known_error = True
-      error_code = 1
+      error_code = self.ERROR_CODE_INVALID_CREDENTIALS
     elif not self._connected and (self._ntrip_version == None or self._ntrip_version == ''):
       self._logwarn('Received unknown error from the server. Note that the NTRIP version was not specified in the launch file. This is not necesarilly the cause of this error, but it may be worth checking your NTRIP casters documentation to see if the NTRIP version needs to be specified.')
       known_error = True
-      error_code = 3
+      error_code = self.ERROR_CODE_UKNONW_CONNECTION_ERROR
 
     # Wish we could just return from the above checks, but some casters return both a success and an error in the response
     # If we received any known error, even if we received a success it should be considered a failure
@@ -166,8 +171,8 @@ class NTRIPClient:
       self._logerr('Invalid response received from http://{}:{}/{}'.format(
         self._host, self._port, self._mountpoint))
       self._logerr('Response: {}'.format(response))
-      if error_code == 0:
-        error_code = 3
+      if error_code == self.ERROR_CODE_NO_ERROR:
+        error_code = self.ERROR_CODE_UKNONW_CONNECTION_ERROR
       self._error_code_passthrough(error_code)
       return False
     else:
