@@ -33,7 +33,7 @@ class NTRIPClient:
   ERROR_CODE_NO_ERROR = 0
   ERROR_CODE_INVALID_CREDENTIALS = 1
   ERROR_CODE_INVALID_MOUNTPOINT = 2
-  ERROR_CODE_UKNONW_CONNECTION_ERROR = 3
+  ERROR_CODE_UKNONW_CONNECTION_ERROR = 4
 
   def __init__(self, host, port, mountpoint, ntrip_version, username, password, error_code_passthrough_function, output_format='stream', logerr=logging.error, logwarn=logging.warning, loginfo=logging.info, logdebug=logging.debug):
     # Bit of a strange pattern here, but save the log functions so we can be agnostic of ROS
