@@ -30,12 +30,18 @@ class NTRIPClient:
   DEFAULT_RECONNECT_ATEMPT_WAIT_SECONDS = 5
   DEFAULT_RTCM_TIMEOUT_SECONDS = 4
 
-  def __init__(self, host, port, mountpoint, ntrip_version, username, password, output_format='stream', logerr=logging.error, logwarn=logging.warning, loginfo=logging.info, logdebug=logging.debug):
+  ERROR_FLAG_NO_ERROR = 0
+  ERROR_FLAG_INVALID_CREDENTIALS = 1
+  ERROR_FLAG_INVALID_MOUNTPOINT = 2
+  ERROR_FLAG_UNKNOWN_CONNECTION_ERROR = 4
+
+  def __init__(self, host, port, mountpoint, ntrip_version, username, password, error_flags_passthrough_function, output_format='stream', logerr=logging.error, logwarn=logging.warning, loginfo=logging.info, logdebug=logging.debug):
     # Bit of a strange pattern here, but save the log functions so we can be agnostic of ROS
     self._logerr = logerr
     self._logwarn = logwarn
     self._loginfo = loginfo
     self._logdebug = logdebug
+    self._error_flags_passthrough = error_flags_passthrough_function
 
     # Save the server info
     self._host = host
@@ -145,15 +151,19 @@ class NTRIPClient:
 
     # Some debugging hints about the kind of error we received
     known_error = False
+    error_flags = self.ERROR_FLAG_NO_ERROR
     if any(sourcetable in response for sourcetable in _SOURCETABLE_RESPONSES):
       self._logwarn('Received sourcetable response from the server. This probably means the mountpoint specified is not valid')
       known_error = True
+      error_flags = error_flags | self.ERROR_FLAG_INVALID_MOUNTPOINT
     elif any(unauthorized in response for unauthorized in _UNAUTHORIZED_RESPONSES):
       self._logwarn('Received unauthorized response from the server. Check your username, password, and mountpoint to make sure they are correct.')
       known_error = True
+      error_flags = error_flags | self.ERROR_FLAG_INVALID_CREDENTIALS
     elif not self._connected and (self._ntrip_version == None or self._ntrip_version == ''):
       self._logwarn('Received unknown error from the server. Note that the NTRIP version was not specified in the launch file. This is not necesarilly the cause of this error, but it may be worth checking your NTRIP casters documentation to see if the NTRIP version needs to be specified.')
       known_error = True
+      error_flags = error_flags | self.ERROR_FLAG_UNKNOWN_CONNECTION_ERROR
 
     # Wish we could just return from the above checks, but some casters return both a success and an error in the response
     # If we received any known error, even if we received a success it should be considered a failure
@@ -161,10 +171,14 @@ class NTRIPClient:
       self._logerr('Invalid response received from http://{}:{}/{}'.format(
         self._host, self._port, self._mountpoint))
       self._logerr('Response: {}'.format(response))
+      if error_flags == self.ERROR_FLAG_NO_ERROR:
+        error_flags = error_flags | self.ERROR_FLAG_UNKNOWN_CONNECTION_ERROR
+      self._error_flags_passthrough(error_flags)
       return False
     else:
       self._loginfo(
         'Connected to http://{}:{}/{}'.format(self._host, self._port, self._mountpoint))
+      self._error_flags_passthrough(self.ERROR_FLAG_NO_ERROR)
       return True
 
 

@@ -2,6 +2,10 @@
 Changelog for package greenzie_ntrip_client
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.5 (2023-07-17)
+------------------
+* Added Error Code publishing on a ROS message
+
 1.2.4 (2023-07-17)
 ------------------
 * Fixed Bug with Building Python Debian

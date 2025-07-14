@@ -6,7 +6,7 @@ import json
 import importlib
 
 import rospy
-from std_msgs.msg import Header, UInt8MultiArray, MultiArrayDimension
+from std_msgs.msg import Header, UInt8MultiArray, MultiArrayDimension, UInt8
 from nmea_msgs.msg import Sentence
 
 from ntrip_client.ntrip_client import NTRIPClient
@@ -90,6 +90,7 @@ class NTRIPRos:
     # Setup the RTCM publisher
     self._rtcm_timer = None
     self._rtcm_pub = rospy.Publisher('rtcm', self._rtcm_message_type, queue_size=10)
+    self._error_flags_pub = rospy.Publisher('error_flags', UInt8, queue_size=10)
 
     # Initialize the client
     self._client = NTRIPClient(
@@ -103,7 +104,8 @@ class NTRIPRos:
       logerr=rospy.logerr,
       logwarn=rospy.logwarn,
       loginfo=rospy.loginfo,
-      logdebug=rospy.logdebug
+      logdebug=rospy.logdebug,
+      error_flags_passthrough_function=self.error_flags_passthrough
     )
 
     # Get some SSL parameters for the NTRIP client
@@ -187,6 +189,11 @@ class NTRIPRos:
     msg_out.data = rtcm
     
     return msg_out
+  
+  def error_flags_passthrough(self, error_flags):
+    msg_out = UInt8()
+    msg_out.data = error_flags
+    self._error_flags_pub.publish(msg_out)
 
 if __name__ == '__main__':
   ntrip_ros = NTRIPRos()
