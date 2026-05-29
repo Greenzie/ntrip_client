@@ -19,33 +19,37 @@ workflows:
     unless: << pipeline.parameters.manual-bobcat-deploy >>
     jobs:
       # Build jobs
-      - greenzie/debian_build:
+      - greenzie/debian_build_simple:
           name: "amd_debian_build"
           context: GREENZIE
           platform: amd64
           executor: greenzie/debianize_amd64
+          generate_changelog: true
 
-      - greenzie/debian_build:
+      - greenzie/debian_build_simple:
           name: "arm64_debian_build"
           context: GREENZIE
           platform: arm64
           executor: greenzie/debianize_arm64
+          generate_changelog: true
 
   manualdeploy:
     when: << pipeline.parameters.manual-bobcat-deploy >>
     jobs:
       # Build jobs
-      - greenzie/debian_build:
+      - greenzie/debian_build_simple:
           name: "amd_debian_build"
           context: GREENZIE
           platform: amd64
           executor: greenzie/debianize_amd64
+          generate_changelog: true
 
-      - greenzie/debian_build:
+      - greenzie/debian_build_simple:
           name: "arm64_debian_build"
           context: GREENZIE
           platform: arm64
           executor: greenzie/debianize_arm64
+          generate_changelog: true
 
       - greenzie/debian_deploy_experimental:
           name: "deploy_amd64_greenzie"
