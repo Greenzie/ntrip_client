@@ -1,10 +1,15 @@
 version: 2.1
 
 orbs:
-  greenzie: greenzie/build_and_publish_debs@0.1.1
+  greenzie: greenzie/build_and_publish_debs@0.1.3
 
 parameters:
-  manual-bobcat-deploy:
+  manual_deploy:
+    description: "Trigger a manual deploy to greenzie-experimental and greenzie-public-experimental."
+    type: boolean
+    default: false
+  deploy_public:
+    description: "[Testing purposes only] Deploy only to greenzie-public-experimental (skips greenzie-experimental)."
     type: boolean
     default: false
   # Use this parameter to change the branch that the deployment jobs are triggered on
@@ -16,9 +21,11 @@ parameters:
 workflows:
   version: 2
   pushbuild:
-    unless: << pipeline.parameters.manual-bobcat-deploy >>
+    when:
+      and:
+        - not: << pipeline.parameters.manual_deploy >>
+        - not: << pipeline.parameters.deploy_public >>
     jobs:
-      # Build jobs
       - greenzie/debian_build_simple:
           name: "amd_debian_build"
           context: GREENZIE
@@ -34,9 +41,8 @@ workflows:
           generate_changelog: true
 
   manualdeploy:
-    when: << pipeline.parameters.manual-bobcat-deploy >>
+    when: << pipeline.parameters.manual_deploy >>
     jobs:
-      # Build jobs
       - greenzie/debian_build_simple:
           name: "amd_debian_build"
           context: GREENZIE
@@ -52,22 +58,46 @@ workflows:
           generate_changelog: true
 
       - greenzie/debian_deploy_experimental:
-          name: "deploy_amd64_greenzie"
+          name: "deploy_all_greenzie"
           context: GREENZIE
           requires:
             - amd_debian_build
-
-      - greenzie/debian_deploy_experimental:
-          name: "deploy_arm64_greenzie"
-          context: GREENZIE
-          architecture: arm64
-          requires:
             - arm64_debian_build
 
-      - greenzie/debian_deploy_experimental:
-          name: "deploy_all_bobcat"
+      - greenzie/debian_deploy_experimental_ssh:
+          name: "deploy_to_public_experimental"
           context: GREENZIE
-          server_hostname: bobcat
+          repo_name: experimental-greenzie-public-focal-main
+          channel: greenzie-public-experimental
           requires:
-            - arm64_debian_build
             - amd_debian_build
+            - arm64_debian_build
+
+  manualdeploy-public:
+    when:
+      and:
+        - << pipeline.parameters.deploy_public >>
+        - not: << pipeline.parameters.manual_deploy >>
+    jobs:
+      - greenzie/debian_build_simple:
+          name: "amd_debian_build"
+          context: GREENZIE
+          platform: amd64
+          executor: greenzie/debianize_amd64
+          generate_changelog: true
+
+      - greenzie/debian_build_simple:
+          name: "arm64_debian_build"
+          context: GREENZIE
+          platform: arm64
+          executor: greenzie/debianize_arm64
+          generate_changelog: true
+
+      - greenzie/debian_deploy_experimental_ssh:
+          name: "deploy_to_public_experimental"
+          context: GREENZIE
+          repo_name: experimental-greenzie-public-focal-main
+          channel: greenzie-public-experimental
+          requires:
+            - amd_debian_build
+            - arm64_debian_build
