@@ -1,7 +1,9 @@
 version: 2.1
 
 orbs:
-  greenzie: greenzie/build_and_publish_debs@0.1.3
+  # TEMP for sc-51297 testing: dev label with the Python generate_debian_changelog command.
+  # Revert to a real pinned release once the orb change is promoted.
+  greenzie: greenzie/build_and_publish_debs@dev:sc-51297-changelog
 
 parameters:
   manual_deploy:
